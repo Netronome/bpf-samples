@@ -21,28 +21,26 @@ Loading the Demo
 
 The program can be loaded using iproute2 using the following commands
 
-XDP driver mode::
+XDP driver mode ::
 
  # ip link set dev { DEV } xdpdrv obj l4lb_xdp.o sec xdp
 
-XDP offload::
+XDP offload ::
 
  # ip link set dev { DEV } xdpoffload obj l4lb_xdp.o sec xdp
 
-
-The load balancer map can be filled with the l4lb_map.py script::
+The load balancer map can be filled with the l4lb_map.py script ::
 
  # ./l4lb_map.py -i { DEV } -f { file containing destinations }
 
-
-Traffic statistics may be seen using the l4lb_stats.py script::
+Traffic statistics may be seen using the l4lb_stats.py script ::
 
  # ./l4lb_stats.py -i { DEV }
 
 Example
 ~~~~~~~
 
-To demo the program on offload mode on interface ens4np0, with 32 destinations::
+To demo the program on offload mode on interface ens4np0, with 32 destinations ::
 
  # ip link set dev ens4np0 xdpoffload obj l4lb_xdp.o sec xdp
   Note: 12 bytes struct bpf_elf_map fixup performed due to size mismatch!
@@ -91,14 +89,13 @@ To demo the program on offload mode on interface ens4np0, with 32 destinations::
 Removing the Demo
 ~~~~~~~~~~~~~~~~
 
-XDP driver mode::
+XDP driver mode ::
 
 # ip link set dev { DEV } xdpdrv off
 
-XDP offload::
+XDP offload ::
 
 # ip link set dev { DEV } xdpoffload off
-
 
 Minimum Requirements for Demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,4 +104,4 @@ Minimum Requirements for Demo
 - iproute2 ss180402
 - bpftool
 - Python 3
-- Agilio eBPF firmware (for HW offload)
+- Agilio® eBPF firmware (for HW offload)
