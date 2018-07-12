@@ -23,9 +23,11 @@ List of available demos
 Application              Kernel Required
 ======================== ===============
 `Layer 4 Load Balancer`_     4.17
+`Programmable RSS`_          4.18
 ======================== ===============
 
 .. _Layer 4 Load Balancer: l4lb/
+.. _Programmable RSS: programmable_rss/
 
 Notes
 ~~~~~
