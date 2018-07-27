@@ -1,13 +1,13 @@
 #ifndef _LINUX_JHASH_H
 #define _LINUX_JHASH_H
 
-/* Copied from $(LINUX)/include/linux/jhash.h */
+/* Copied from $(LINUX)/include/linux/jhash.h (kernel 4.18) */
 
 /* jhash.h: Jenkins hash support.
  *
  * Copyright (C) 2006. Bob Jenkins (bob_jenkins@burtleburtle.net)
  *
- * http://burtleburtle.net/bob/l4lb/hash/
+ * http://burtleburtle.net/bob/hash/
  *
  * These are the credits from Bob's sources:
  *

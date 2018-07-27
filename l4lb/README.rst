@@ -16,8 +16,25 @@ send the packet back out of the network interface to the destination server.
 The map fill and stats scripts are written in python and utilize bpftool to
 showcase how a program can be deployed using iproute2 and bpftool utilities.
 
+Minimum Requirements for Demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Linux kernel 4.17
+- iproute2 v4.16.0 (a.k.a ss180402)
+- clang / LLVM 4.0
+- bpftool
+- Python 3
+- Agilio® eBPF firmware (only for HW offload) - July 2018
+  (available from `Netronome's support website`_)
+
+.. _Netronome's support website: https://help.netronome.com/
+
 Loading the Demo
 ~~~~~~~~~~~~~~~~
+
+To compile the XDP program ::
+
+ $ make
 
 The program can be loaded using iproute2 using the following commands
 
@@ -29,13 +46,17 @@ XDP offload ::
 
  # ip link set dev { DEV } xdpoffload obj l4lb_xdp.o sec xdp
 
-The load balancer map can be filled with the l4lb_map.py script ::
+The load balancer map can be filled with the l4lb_map.py script. Note that
+sample files with lists of destinations are provided under
+`destination_samples/`_ ::
 
  # ./l4lb_map.py -i { DEV } -f { file containing destinations }
 
 Traffic statistics may be seen using the l4lb_stats.py script ::
 
  # ./l4lb_stats.py -i { DEV }
+
+.. _destination_samples/: destination_samples/
 
 Example
 ~~~~~~~
@@ -96,12 +117,3 @@ XDP driver mode ::
 XDP offload ::
 
 # ip link set dev { DEV } xdpoffload off
-
-Minimum Requirements for Demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- Linux kernel 4.17
-- iproute2 ss180402
-- bpftool
-- Python 3
-- Agilio® eBPF firmware (for HW offload)

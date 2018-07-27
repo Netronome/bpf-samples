@@ -19,6 +19,8 @@ To enable XDP offload on a Agilio CX, please refer to `Netronome eBPF user guide
 List of available demos
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+The sources for each demo are located in a specific subdirectory.
+
 ======================== ===============
 Application              Kernel Required
 ======================== ===============
@@ -28,6 +30,10 @@ Application              Kernel Required
 
 .. _Layer 4 Load Balancer: l4lb/
 .. _Programmable RSS: programmable_rss/
+
+The ``tools`` directory does not actually contain tools for end users, but
+gathers various libraries and kernel files coming from the kernel tree and
+required for compiling the samples.
 
 Notes
 ~~~~~

@@ -48,7 +48,18 @@ This demo shows support for simple IPinIP encapsulation because it's easy to set
 up and test, but UDP encapsulations (VXLAN, Geneve, FOU, GUE, etc.), NSH, QUIC
 or any other protocol can easily be implemented.
 
-Note: This program requires a XDP offload compatible SmartNIC.
+Minimum Requirements for Demo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This program requires a XDP offload compatible SmartNIC. It cannot be run in
+driver mode.
+
+- Linux kernel 4.18
+- clang / LLVM 4.0
+- Agilio® eBPF firmware for HW offload - July 2018
+  (available from `Netronome's support website`_)
+
+.. _Netronome's support website: https://help.netronome.com/
 
 Loading the Demo
 ~~~~~~~~~~~~~~~~
@@ -68,11 +79,11 @@ Examples
 The following examples will utilise the interface ens4np0 which has 8 queues
 set within ethtool. All examples are run against the same IPinIP traffic ::
 
- ethtool -L ens4np0 combined 8 rx 0 tx 0
+ # ethtool -L ens4np0 combined 8 rx 0 tx 0
 
 Sending all traffic to queue 5 ::
 
- ./rss -i ens4np0 -q 5
+ # ./rss -i ens4np0 -q 5
  -------------------------------------------------
  RSS Queue 0: 0
  RSS Queue 1: 0
@@ -85,7 +96,7 @@ Sending all traffic to queue 5 ::
 
 Distributing traffic using jhash algorithm ::
 
- ./rss -i ens4np0 -j
+ # ./rss -i ens4np0 -j
  -------------------------------------------------
  RSS Queue 0: 0
  RSS Queue 1: 0
@@ -98,7 +109,7 @@ Distributing traffic using jhash algorithm ::
 
 Distributing traffic using jhash algorithm with Symmetric RSS ::
 
- ./rss -i ens4np0 -j -s
+ # ./rss -i ens4np0 -j -s
  -------------------------------------------------
  RSS Queue 0: 0
  RSS Queue 1: 0
@@ -111,7 +122,7 @@ Distributing traffic using jhash algorithm with Symmetric RSS ::
 
 Distributing traffic using jhash algorithm with encapsulated IPs ::
 
- ./rss -i ens4np0 -j -e
+ # ./rss -i ens4np0 -j -e
  -------------------------------------------------
  RSS Queue 0: 72,449
  RSS Queue 1: 104,648
@@ -124,7 +135,7 @@ Distributing traffic using jhash algorithm with encapsulated IPs ::
 
 Distributing traffic using jhash algorithm with encapsulated IPs on 4 queues ::
 
- ./rss -i ens4np0 -j -e -m 4
+ # ./rss -i ens4np0 -j -e -m 4
  -------------------------------------------------
  RSS Queue 0: 136,820
  RSS Queue 1: 233,403
@@ -135,11 +146,5 @@ Removing the Demo
 ~~~~~~~~~~~~~~~~~
 
 The XDP program will automatically be unloaded on exiting the rss program
-
-Minimum Requirements for Demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- Linux kernel 4.18
-- Agilio® eBPF firmware for HW offload (newer than July 2018)
 
 .. [1] https://www.kernel.org/doc/Documentation/networking/scaling.txt
