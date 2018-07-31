@@ -73,6 +73,23 @@ To load the program ::
 
  # ./rss -i INTERFACE
 
+Traffic Generation
+~~~~~~~~~~~~~~~~~~
+
+Traffic can be generated using a variety of tools, but for ease of use a pcap
+file has been supplied (traffic_IPIP.pcap). This traffic can be replayed
+using the following instructions.
+
+For the host running the eBPF program, ensure promiscuous mode is enabled to
+allow for all packets to be received. This is required as the destination MAC
+address set within the pcap file has been set for another host ::
+
+ # ip link set dev ens4np0 promisc on
+
+On the traffic generator, use tcpreplay to retransmit the test traffic ::
+
+ # tcpreplay -i ens0 -l 500 traffic_IPIP.pcap
+
 Examples
 ~~~~~~~~
 
