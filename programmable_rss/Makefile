@@ -50,7 +50,9 @@ kernel-source:
 
 kernel-source-devel-headers: kernel-source
 	@if [ ! -d $(KERNEL)/usr/include/ ]; then \
-		echo -n "Error: Need kernel headers "; \
+		echo "Error: Need kernel headers"; \
+		echo "May need to run make headers_install within"; \
+		echo "$(KERNEL)"; \
 		exit 1; \
 	else true; fi
 
