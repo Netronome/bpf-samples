@@ -27,7 +27,8 @@ CFLAGS += -I../kernel/tools/lib
 CFLAGS_LIBBPF ?= -I$(KERNEL)/tools/include
 CFLAGS_LIBBPF += -I$(KERNEL)/tools/perf
 CFLAGS_LIBBPF += -I$(KERNEL)/usr/include
-CFLAGS_lIBBPF += -I$(KERNEL)/arch/x86/include
+CFLAGS_LIBBPF += -I$(KERNEL)/arch/x86/include
+CFLAGS_LIBBPF += -I../kernel/tools/perf
 
 LDFLAGS = -lelf
 
