@@ -1,3 +1,5 @@
+.. SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+
 XDP Demo Apps
 =============
 
@@ -26,10 +28,12 @@ Application              Kernel Required
 ======================== ===============
 `Layer 4 Load Balancer`_     4.17
 `Programmable RSS`_          4.18
+`xdpdump`_                   4.18
 ======================== ===============
 
 .. _Layer 4 Load Balancer: l4lb/
 .. _Programmable RSS: programmable_rss/
+.. _xdpdump: xdpdump/
 
 The ``tools`` directory does not actually contain tools for end users, but
 gathers various libraries and kernel files coming from the kernel tree and
