@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: LGPL-2.1
-/* Copied from $(LINUX)/tools/lib/bpf/libbpf.c (kernel 4.18) */
+/*
+ * Copied from $(LINUX)/tools/lib/bpf/
+ * commit 07f2d4eac2a850fc9649b27aa935cdcd263fb1ff
+ * tools: libbpf: add extended attributes version of bpf_object__open()
+ */
 
 /*
  * Common eBPF ELF object loading operations.
@@ -235,6 +239,7 @@ struct bpf_object {
 	size_t nr_maps;
 
 	bool loaded;
+	bool has_pseudo_calls;
 
 	/*
 	 * Information when doing elf related work. Only valid if fd
@@ -401,10 +406,6 @@ bpf_object__init_prog_names(struct bpf_object *obj)
 		const char *name = NULL;
 
 		prog = &obj->programs[pi];
-		if (prog->idx == obj->efile.text_shndx) {
-			name = ".text";
-			goto skip_search;
-		}
 
 		for (si = 0; si < symbols->d_size / sizeof(GElf_Sym) && !name;
 		     si++) {
@@ -427,12 +428,15 @@ bpf_object__init_prog_names(struct bpf_object *obj)
 			}
 		}
 
+		if (!name && prog->idx == obj->efile.text_shndx)
+			name = ".text";
+
 		if (!name) {
 			pr_warning("failed to find sym for prog %s\n",
 				   prog->section_name);
 			return -EINVAL;
 		}
-skip_search:
+
 		prog->name = strdup(name);
 		if (!prog->name) {
 			pr_warning("failed to allocate memory for prog sym %s\n",
@@ -982,6 +986,7 @@ bpf_program__collect_reloc(struct bpf_program *prog, GElf_Shdr *shdr,
 			prog->reloc_desc[i].type = RELO_CALL;
 			prog->reloc_desc[i].insn_idx = insn_idx;
 			prog->reloc_desc[i].text_off = sym.st_value;
+			obj->has_pseudo_calls = true;
 			continue;
 		}
 
@@ -1427,6 +1432,12 @@ out:
 	return err;
 }
 
+static bool bpf_program__is_function_storage(struct bpf_program *prog,
+					     struct bpf_object *obj)
+{
+	return prog->idx == obj->efile.text_shndx && obj->has_pseudo_calls;
+}
+
 static int
 bpf_object__load_progs(struct bpf_object *obj)
 {
@@ -1434,7 +1445,7 @@ bpf_object__load_progs(struct bpf_object *obj)
 	int err;
 
 	for (i = 0; i < obj->nr_programs; i++) {
-		if (obj->programs[i].idx == obj->efile.text_shndx)
+		if (bpf_program__is_function_storage(&obj->programs[i], obj))
 			continue;
 		err = bpf_program__load(&obj->programs[i],
 					obj->license,
@@ -1514,15 +1525,26 @@ out:
 	return ERR_PTR(err);
 }
 
-struct bpf_object *bpf_object__open(const char *path)
+struct bpf_object *bpf_object__open_xattr(struct bpf_object_open_attr *attr)
 {
 	/* param validation */
-	if (!path)
+	if (!attr->file)
 		return NULL;
 
-	pr_debug("loading %s\n", path);
+	pr_debug("loading %s\n", attr->file);
 
-	return __bpf_object__open(path, NULL, 0, true);
+	return __bpf_object__open(attr->file, NULL, 0,
+				  bpf_prog_type__needs_kver(attr->prog_type));
+}
+
+struct bpf_object *bpf_object__open(const char *path)
+{
+	struct bpf_object_open_attr attr = {
+		.file		= path,
+		.prog_type	= BPF_PROG_TYPE_UNSPEC,
+	};
+
+	return bpf_object__open_xattr(&attr);
 }
 
 struct bpf_object *bpf_object__open_buffer(void *obj_buf,
@@ -1859,8 +1881,8 @@ void *bpf_object__priv(struct bpf_object *obj)
 	return obj ? obj->priv : ERR_PTR(-EINVAL);
 }
 
-struct bpf_program *
-bpf_program__next(struct bpf_program *prev, struct bpf_object *obj)
+static struct bpf_program *
+__bpf_program__next(struct bpf_program *prev, struct bpf_object *obj)
 {
 	size_t idx;
 
@@ -1881,6 +1903,18 @@ bpf_program__next(struct bpf_program *prev, struct bpf_object *obj)
 	return &obj->programs[idx];
 }
 
+struct bpf_program *
+bpf_program__next(struct bpf_program *prev, struct bpf_object *obj)
+{
+	struct bpf_program *prog = prev;
+
+	do {
+		prog = __bpf_program__next(prog, obj);
+	} while (prog && bpf_program__is_function_storage(prog, obj));
+
+	return prog;
+}
+
 int bpf_program__set_priv(struct bpf_program *prog, void *priv,
 			  bpf_program_clear_priv_t clear_priv)
 {
@@ -1895,6 +1929,11 @@ int bpf_program__set_priv(struct bpf_program *prog, void *priv,
 void *bpf_program__priv(struct bpf_program *prog)
 {
 	return prog ? prog->priv : ERR_PTR(-EINVAL);
+}
+
+void bpf_program__set_ifindex(struct bpf_program *prog, __u32 ifindex)
+{
+	prog->prog_ifindex = ifindex;
 }
 
 const char *bpf_program__title(struct bpf_program *prog, bool needs_copy)
@@ -2038,9 +2077,11 @@ static const struct {
 	BPF_PROG_SEC("lwt_in",		BPF_PROG_TYPE_LWT_IN),
 	BPF_PROG_SEC("lwt_out",		BPF_PROG_TYPE_LWT_OUT),
 	BPF_PROG_SEC("lwt_xmit",	BPF_PROG_TYPE_LWT_XMIT),
+	BPF_PROG_SEC("lwt_seg6local",	BPF_PROG_TYPE_LWT_SEG6LOCAL),
 	BPF_PROG_SEC("sockops",		BPF_PROG_TYPE_SOCK_OPS),
 	BPF_PROG_SEC("sk_skb",		BPF_PROG_TYPE_SK_SKB),
 	BPF_PROG_SEC("sk_msg",		BPF_PROG_TYPE_SK_MSG),
+	BPF_PROG_SEC("lirc_mode2",	BPF_PROG_TYPE_LIRC_MODE2),
 	BPF_SA_PROG_SEC("cgroup/bind4",	BPF_CGROUP_INET4_BIND),
 	BPF_SA_PROG_SEC("cgroup/bind6",	BPF_CGROUP_INET6_BIND),
 	BPF_SA_PROG_SEC("cgroup/connect4", BPF_CGROUP_INET4_CONNECT),
@@ -2056,23 +2097,31 @@ static const struct {
 #undef BPF_S_PROG_SEC
 #undef BPF_SA_PROG_SEC
 
-static int bpf_program__identify_section(struct bpf_program *prog)
+int libbpf_prog_type_by_name(const char *name, enum bpf_prog_type *prog_type,
+			     enum bpf_attach_type *expected_attach_type)
 {
 	int i;
 
-	if (!prog->section_name)
-		goto err;
+	if (!name)
+		return -EINVAL;
 
-	for (i = 0; i < ARRAY_SIZE(section_names); i++)
-		if (strncmp(prog->section_name, section_names[i].sec,
-			    section_names[i].len) == 0)
-			return i;
+	for (i = 0; i < ARRAY_SIZE(section_names); i++) {
+		if (strncmp(name, section_names[i].sec, section_names[i].len))
+			continue;
+		*prog_type = section_names[i].prog_type;
+		*expected_attach_type = section_names[i].expected_attach_type;
+		return 0;
+	}
+	return -EINVAL;
+}
 
-err:
-	pr_warning("failed to guess program type based on section name %s\n",
-		   prog->section_name);
-
-	return -1;
+static int
+bpf_program__identify_section(struct bpf_program *prog,
+			      enum bpf_prog_type *prog_type,
+			      enum bpf_attach_type *expected_attach_type)
+{
+	return libbpf_prog_type_by_name(prog->section_name, prog_type,
+					expected_attach_type);
 }
 
 int bpf_map__fd(struct bpf_map *map)
@@ -2119,6 +2168,16 @@ int bpf_map__set_priv(struct bpf_map *map, void *priv,
 void *bpf_map__priv(struct bpf_map *map)
 {
 	return map ? map->priv : ERR_PTR(-EINVAL);
+}
+
+bool bpf_map__is_offload_neutral(struct bpf_map *map)
+{
+	return map->def.type == BPF_MAP_TYPE_PERF_EVENT_ARRAY;
+}
+
+void bpf_map__set_ifindex(struct bpf_map *map, __u32 ifindex)
+{
+	map->map_ifindex = ifindex;
 }
 
 struct bpf_map *
@@ -2195,12 +2254,15 @@ int bpf_prog_load(const char *file, enum bpf_prog_type type,
 int bpf_prog_load_xattr(const struct bpf_prog_load_attr *attr,
 			struct bpf_object **pobj, int *prog_fd)
 {
+	struct bpf_object_open_attr open_attr = {
+		.file		= attr->file,
+		.prog_type	= attr->prog_type,
+	};
 	struct bpf_program *prog, *first_prog = NULL;
 	enum bpf_attach_type expected_attach_type;
 	enum bpf_prog_type prog_type;
 	struct bpf_object *obj;
 	struct bpf_map *map;
-	int section_idx;
 	int err;
 
 	if (!attr)
@@ -2208,8 +2270,7 @@ int bpf_prog_load_xattr(const struct bpf_prog_load_attr *attr,
 	if (!attr->file)
 		return -EINVAL;
 
-	obj = __bpf_object__open(attr->file, NULL, 0,
-				 bpf_prog_type__needs_kver(attr->prog_type));
+	obj = bpf_object__open_xattr(&open_attr);
 	if (IS_ERR_OR_NULL(obj))
 		return -ENOENT;
 
@@ -2222,26 +2283,27 @@ int bpf_prog_load_xattr(const struct bpf_prog_load_attr *attr,
 		prog->prog_ifindex = attr->ifindex;
 		expected_attach_type = attr->expected_attach_type;
 		if (prog_type == BPF_PROG_TYPE_UNSPEC) {
-			section_idx = bpf_program__identify_section(prog);
-			if (section_idx < 0) {
+			err = bpf_program__identify_section(prog, &prog_type,
+							    &expected_attach_type);
+			if (err < 0) {
+				pr_warning("failed to guess program type based on section name %s\n",
+					   prog->section_name);
 				bpf_object__close(obj);
 				return -EINVAL;
 			}
-			prog_type = section_names[section_idx].prog_type;
-			expected_attach_type =
-				section_names[section_idx].expected_attach_type;
 		}
 
 		bpf_program__set_type(prog, prog_type);
 		bpf_program__set_expected_attach_type(prog,
 						      expected_attach_type);
 
-		if (prog->idx != obj->efile.text_shndx && !first_prog)
+		if (!bpf_program__is_function_storage(prog, obj) && !first_prog)
 			first_prog = prog;
 	}
 
 	bpf_map__for_each(map, obj) {
-		map->map_ifindex = attr->ifindex;
+		if (!bpf_map__is_offload_neutral(map))
+			map->map_ifindex = attr->ifindex;
 	}
 
 	if (!first_prog) {

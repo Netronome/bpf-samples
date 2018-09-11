@@ -1,5 +1,9 @@
 /* SPDX-License-Identifier: LGPL-2.1 */
-/* Copied from $(LINUX)/tools/lib/bpf/libbpf.h (kernel 4.18) */
+/*
+ * Copied from $(LINUX)/tools/lib/bpf/
+ * commit 07f2d4eac2a850fc9649b27aa935cdcd263fb1ff
+ * tools: libbpf: add extended attributes version of bpf_object__open()
+ */
 
 /*
  * Common eBPF ELF object loading operations.
@@ -67,7 +71,13 @@ void libbpf_set_print(libbpf_print_fn_t warn,
 /* Hide internal to user */
 struct bpf_object;
 
+struct bpf_object_open_attr {
+	const char *file;
+	enum bpf_prog_type prog_type;
+};
+
 struct bpf_object *bpf_object__open(const char *path);
+struct bpf_object *bpf_object__open_xattr(struct bpf_object_open_attr *attr);
 struct bpf_object *bpf_object__open_buffer(void *obj_buf,
 					   size_t obj_buf_sz,
 					   const char *name);
@@ -93,6 +103,9 @@ int bpf_object__set_priv(struct bpf_object *obj, void *priv,
 			 bpf_object_clear_priv_t clear_priv);
 void *bpf_object__priv(struct bpf_object *prog);
 
+int libbpf_prog_type_by_name(const char *name, enum bpf_prog_type *prog_type,
+			     enum bpf_attach_type *expected_attach_type);
+
 /* Accessors of bpf_program */
 struct bpf_program;
 struct bpf_program *bpf_program__next(struct bpf_program *prog,
@@ -110,6 +123,7 @@ int bpf_program__set_priv(struct bpf_program *prog, void *priv,
 			  bpf_program_clear_priv_t clear_priv);
 
 void *bpf_program__priv(struct bpf_program *prog);
+void bpf_program__set_ifindex(struct bpf_program *prog, __u32 ifindex);
 
 const char *bpf_program__title(struct bpf_program *prog, bool needs_copy);
 
@@ -252,6 +266,8 @@ typedef void (*bpf_map_clear_priv_t)(struct bpf_map *, void *);
 int bpf_map__set_priv(struct bpf_map *map, void *priv,
 		      bpf_map_clear_priv_t clear_priv);
 void *bpf_map__priv(struct bpf_map *map);
+bool bpf_map__is_offload_neutral(struct bpf_map *map);
+void bpf_map__set_ifindex(struct bpf_map *map, __u32 ifindex);
 int bpf_map__pin(struct bpf_map *map, const char *path);
 
 long libbpf_get_error(const void *ptr);
