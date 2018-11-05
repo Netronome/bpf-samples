@@ -35,9 +35,14 @@ Application              Kernel Required
 .. _Programmable RSS: programmable_rss/
 .. _xdpdump: xdpdump/
 
-The ``tools`` directory does not actually contain tools for end users, but
-gathers various libraries and kernel files coming from the kernel tree and
-required for compiling the samples.
+libbpf
+~~~~~~
+
+The ``libbpf`` directory is a git submodule and contains libraries required for
+compiling the samples. To obtain the submodule content, the following git
+clone command is required:
+
+ git clone --recurse-submodules https://github.com/Netronome/bpf-samples.git
 
 Notes
 ~~~~~
