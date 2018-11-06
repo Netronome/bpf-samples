@@ -31,6 +31,7 @@ Minimum Requirements for Demo
 
 - Linux kernel 4.18
 - clang / LLVM 4.0
+- libelf-dev (Ubuntu) / elfutils-devel (Fedora)
 - Agilio® eBPF firmware for HW offload
   (available from `Netronome's support website`_)
 

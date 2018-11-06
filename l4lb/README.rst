@@ -61,7 +61,7 @@ Traffic statistics may be seen using the l4lb_stats.py script ::
 Traffic Generation
 ~~~~~~~~~~~~~~~~~~
 
-Traffic can be generated using a variety of tools. An example is shown below
+Traffic can be generated using a variety of tools. A command is shown below
 which utilises the hping3 utility to generate the traffic. The command should
 be run on a different host connected to the server running the eBPF l4lb
 program. In this example the traffic generator uses interface ens0 and is
@@ -117,6 +117,9 @@ To demo the program on offload mode on interface ens4np0, with 32 destinations :
     32	10.0.92.11     	   1,032,581 pkts/s	  1,189,534,416 bits/s
 
   [Totals]		  33,026,761 pkts/s	 38,046,848,592 bits/s
+
+Note: This example was produced with a high performance traffic generator,
+lower rates are expected with hping3.
 
 Removing the Demo
 ~~~~~~~~~~~~~~~~

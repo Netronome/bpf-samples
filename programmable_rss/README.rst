@@ -56,6 +56,7 @@ driver mode.
 
 - Linux kernel 4.18
 - clang / LLVM 4.0
+- libelf-dev (Ubuntu) / elfutils-devel (Fedora)
 - Agilio® eBPF firmware for HW offload - July 2018
   (available from `Netronome's support website`_)
 
