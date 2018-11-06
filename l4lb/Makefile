@@ -9,8 +9,7 @@ SRCS=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(SRCS))
 Q ?= @
 
-INCLUDE_DIRS ?= -I../kernel/tools/
-INCLUDE_DIRS += -I../kernel/tools/include/
+INCLUDE_DIRS ?= -I../headers/
 
 %.o: %.c
 	@echo "\tLLVM CC $@"

@@ -11,8 +11,8 @@
 #include <linux/string.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
-#include <testing/selftests/bpf/bpf_endian.h>
-#include <testing/selftests/bpf/bpf_helpers.h>
+#include "bpf_endian.h"
+#include "bpf_helpers.h"
 #include "xdpdump_common.h"
 
 struct bpf_map_def SEC("maps") perf_map = {

@@ -10,11 +10,11 @@
 #include <linux/if_vlan.h>
 #include <linux/in.h>
 #include <linux/ip.h>
-#include <linux/jhash.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
-#include <testing/selftests/bpf/bpf_endian.h>
-#include <testing/selftests/bpf/bpf_helpers.h>
+#include "bpf_endian.h"
+#include "bpf_helpers.h"
+#include "jhash.h"
 
 #define MAX_SERVERS 512
 /* 0x3FFF mask to check for fragment offset field */

@@ -8,12 +8,12 @@
 #include <linux/in.h>
 #include <linux/ip.h>
 #include <linux/ipv6.h>
-#include <linux/jhash.h>
 #include <linux/string.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
-#include <testing/selftests/bpf/bpf_endian.h>
-#include <testing/selftests/bpf/bpf_helpers.h>
+#include "bpf_endian.h"
+#include "bpf_helpers.h"
+#include "jhash.h"
 #include "rss_common.h"
 
 struct pkt_meta {

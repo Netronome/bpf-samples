@@ -15,9 +15,7 @@ USER_OBJ = ${USER_C:.c=.o}
 OBJECT_LIBBPF = $(LIBBPF_DIR)/libbpf.a
 
 CFLAGS ?= -I$(LIBBPF_DIR)/root/usr/include/
-CFLAGS += -I../kernel/tools
-CFLAGS += -I../kernel/tools/include
-CFLAGS += -I../kernel/tools/lib
+CFLAGS += -I../headers/
 LDFLAGS ?= -L$(LIBBPF_DIR)
 
 LIBS = -lbpf -lelf
