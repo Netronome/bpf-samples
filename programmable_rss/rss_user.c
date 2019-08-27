@@ -53,6 +53,46 @@ static int get_interface_rx_channels(int ifindex)
 	return cmd.combined_count + cmd.rx_count;
 }
 
+static int poll_stats_single_queue(int indirect_map_fd, int queue, int poll_secs)
+{
+	struct indirect_queue indirect_lookup;
+	int value = 0, prev = 0;
+	struct timespec t1, t2;
+	double time_taken;
+	long queue_rate;
+	int i = 0;
+
+	/* use thousand separators in printf */
+	setlocale(LC_NUMERIC, "en_US");
+
+	clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
+
+	while (true) {
+		printf("-------------------------------------------------\n\n");
+		if (bpf_map_lookup_elem(indirect_map_fd,
+					&i, &indirect_lookup) != 0) {
+			printf("Err lookup failed\n");
+			return 0;
+		}
+
+		value = indirect_lookup.packet_cnt;
+
+		/* calc sample period to allow rate to be obtained */
+		clock_gettime(CLOCK_MONOTONIC_RAW, &t2);
+		time_taken = (t2.tv_sec + 1.0e-9 * t2.tv_nsec) -
+			     (t1.tv_sec + 1.0e-9 * t1.tv_nsec);
+
+		queue_rate = (value - prev) / time_taken;
+		printf("RSS Queue %d: %'ld\n", queue, queue_rate);
+		prev = value;
+		value = 0;
+
+		t1 = t2;
+		usleep(poll_secs * 1000 * 1000);
+	}
+}
+
+
 static int poll_stats(int indirect_map_fd, int queues_enabled, int poll_secs)
 {
 	struct indirect_queue indirect_lookup;
@@ -229,6 +269,21 @@ int main(int argc, char **argv)
 	if (!(ctrl_map_fd >= 0 && indirect_map_fd >= 0)) {
 		printf("Err: Cannot find maps\n");
 		return -1;
+	}
+
+	/* use indirection map for stats in the single queue case */
+	if (mapctrl.select_mode == QUEUE_STATIC) {
+		indirect_rec.queue_num = mapctrl.queue_static;
+		i = 0;
+
+		if (bpf_map_update_elem(indirect_map_fd, &i, &indirect_rec,
+					BPF_ANY) != 0) {
+			printf("Err: Map update failed\n");
+			return -1;
+		}
+
+		poll_stats_single_queue(indirect_map_fd, mapctrl.queue_static, 1);
+		return 0;
 	}
 
 	/* fill ctrl map with hash mode queues */
